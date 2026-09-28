@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-size: 1.125rem; /* 18px base text for 60+ elderly users */
+    line-height: 1.6;
+    background-color: #0f172a;
+    color: #1e293b;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Support Gujarati and Devanagari font rendering */
+  [lang="gu"], .font-gu {
+    font-family: 'Noto Sans Gujarati', 'Plus Jakarta Sans', sans-serif;
+  }
+  [lang="hi"], .font-hi {
+    font-family: 'Noto Sans Devanagari', 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+/* Custom Accessibility & Mobile Frame Utilities */
+.mobile-container {
+  max-width: 440px;
+  min-height: 100vh;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ffffff;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+}
+
+/* Accessible tap target (minimum 48px) */
+.tap-target {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Huge primary action button (minimum 72px tall for elderly dexterity) */
+.btn-huge {
+  min-height: 72px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+/* Gentle pulse for due alerts */
+@keyframes alertPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+  }
+}
+
+.animate-alert-pulse {
+  animation: alertPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
