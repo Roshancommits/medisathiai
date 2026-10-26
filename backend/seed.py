@@ -1,9 +1,14 @@
 import os
 import json
 import datetime
-from backend.database import SessionLocal, engine, Base
-from backend.models import User, Medicine, DoseLog, ScanHistory, Alert
-from backend.schedule_engine import generate_doses_for_medicine, check_and_create_alerts, get_current_time
+try:
+    from backend.database import SessionLocal, engine, Base
+    from backend.models import User, Medicine, DoseLog, ScanHistory, Alert
+    from backend.schedule_engine import generate_doses_for_medicine, check_and_create_alerts, get_current_time
+except ImportError:
+    from database import SessionLocal, engine, Base
+    from models import User, Medicine, DoseLog, ScanHistory, Alert
+    from schedule_engine import generate_doses_for_medicine, check_and_create_alerts, get_current_time
 
 
 def run_seed():

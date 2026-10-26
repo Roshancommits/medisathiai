@@ -51,21 +51,21 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Quick controls: Voice Toggle, Language Switcher, Settings */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Voice button */}
           <button
             onClick={onToggleVoice}
-            className={`tap-target w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-              voiceEnabled ? 'bg-teal-700 text-teal-100' : 'bg-teal-900/60 text-teal-400 line-through'
+            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+              voiceEnabled ? 'bg-teal-700 text-teal-100 hover:bg-teal-600' : 'bg-teal-900/60 text-teal-400 line-through'
             }`}
             title={voiceEnabled ? 'Voice reminders on' : 'Voice reminders muted'}
             aria-label="Toggle voice alerts"
           >
-            {voiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
 
           {/* Quick Language Toggle */}
-          <div className="flex bg-teal-900/60 p-0.5 rounded-lg border border-teal-700/50">
+          <div className="flex bg-teal-900/60 p-0.5 rounded-lg border border-teal-700/50 shrink-0">
             {(['en-IN', 'hi-IN', 'gu-IN'] as Language[]).map((l) => {
               const label = l === 'en-IN' ? 'EN' : l === 'hi-IN' ? 'हिं' : 'ગુજ';
               const active = language === l;
@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   key={l}
                   onClick={() => onLanguageChange(l)}
-                  className={`px-2 py-1 text-xs font-bold rounded ${
+                  className={`px-1.5 py-1 text-xs font-bold rounded transition-colors ${
                     active ? 'bg-white text-teal-900 shadow-sm' : 'text-teal-200 hover:text-white'
                   }`}
                   aria-label={`Switch to ${l}`}
@@ -87,11 +87,11 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Settings cog */}
           <button
             onClick={onOpenSettings}
-            className="tap-target w-10 h-10 rounded-lg bg-teal-700 hover:bg-teal-600 flex items-center justify-center text-teal-100 transition-colors shadow-sm"
+            className="w-9 h-9 rounded-lg bg-teal-700 hover:bg-teal-600 flex items-center justify-center text-teal-100 transition-colors shadow-sm shrink-0"
             title="Settings & Dev Tools"
             aria-label="Open settings"
           >
-            <SettingsIcon className="w-5 h-5" />
+            <SettingsIcon className="w-4 h-4" />
           </button>
         </div>
       </div>

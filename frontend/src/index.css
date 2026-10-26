@@ -24,11 +24,13 @@
 /* Custom Accessibility & Mobile Frame Utilities */
 .mobile-container {
   max-width: 440px;
+  width: 100%;
   min-height: 100vh;
   margin-left: auto;
   margin-right: auto;
   background-color: #ffffff;
   position: relative;
+  overflow-x: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
 }
 

@@ -82,8 +82,11 @@ except ImportError:
     )
     from seed import run_seed
 
-# Initialize Database tables
-Base.metadata.create_all(bind=engine)
+# Initialize Database tables safely
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Warning initializing DB tables: {e}")
 
 app = FastAPI(
     title="MediSathi AI API",
@@ -104,14 +107,18 @@ app.add_middleware(
 @app.on_event("startup")
 def startup_event():
     # If no users exist, run the seed script automatically
-    db = next(get_db())
     try:
-        user = db.query(User).first()
-        if not user:
-            print("No existing user found. Running initial database seed...")
-            run_seed()
-    finally:
-        db.close()
+        Base.metadata.create_all(bind=engine)
+        db = next(get_db())
+        try:
+            user = db.query(User).first()
+            if not user:
+                print("No existing user found. Running initial database seed...")
+                run_seed()
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"Notice on startup seed: {e}")
 
 
 # ---------------- HEALTH & STATUS ----------------

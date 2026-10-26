@@ -2,7 +2,10 @@ import json
 import datetime
 from typing import Dict, List, Tuple, Any
 from sqlalchemy.orm import Session
-from backend.models import Medicine, DoseLog, User, Alert
+try:
+    from backend.models import Medicine, DoseLog, User, Alert
+except ImportError:
+    from models import Medicine, DoseLog, User, Alert
 
 # Global simulated offset in minutes for demonstration purposes
 SIMULATED_OFFSET_MINUTES = 0
