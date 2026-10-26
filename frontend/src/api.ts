@@ -77,10 +77,12 @@ export async function acknowledgeAlert(alertId: number) {
   return res.json();
 }
 
-export async function parsePrescription(file?: File): Promise<PrescriptionParseResponse> {
+export async function parsePrescription(file?: File | Blob): Promise<PrescriptionParseResponse> {
   const formData = new FormData();
   if (file) {
-    formData.append('file', file);
+    // If it's a raw Blob (from LiveCamera), wrap it as a named file
+    const named = file instanceof File ? file : new File([file], 'capture.jpg', { type: file.type || 'image/jpeg' });
+    formData.append('file', named);
   }
   const res = await fetch(`${BASE_URL}/prescription/parse`, {
     method: 'POST',
@@ -106,10 +108,11 @@ export async function getMedicines(): Promise<Medicine[]> {
   return res.json();
 }
 
-export async function identifyPill(file?: File): Promise<PillIdentifyResponse> {
+export async function identifyPill(file?: File | Blob): Promise<PillIdentifyResponse> {
   const formData = new FormData();
   if (file) {
-    formData.append('file', file);
+    const named = file instanceof File ? file : new File([file], 'capture.jpg', { type: file.type || 'image/jpeg' });
+    formData.append('file', named);
   }
   const res = await fetch(`${BASE_URL}/pill/identify`, {
     method: 'POST',
