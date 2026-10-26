@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import datetime
 from typing import List, Optional
@@ -8,37 +9,78 @@ from fastapi.responses import PlainTextResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from backend.database import engine, Base, get_db
-from backend.models import User, Medicine, DoseLog, ScanHistory, Alert
-from backend.schemas import (
-    PrescriptionParseResponse,
-    MedicineCreate,
-    MedicineUpdate,
-    MedicineResponse,
-    TodayScheduleResponse,
-    DoseItem,
-    DoseActionResponse,
-    InventoryItem,
-    AlertItem,
-    PillIdentifyResponse,
-    ScanHistoryItem,
-    UserSettings,
-    SettingsUpdate,
-    SimulateTimeRequest,
-    RefillRequest
-)
-from backend.ai_service import parse_prescription_image, identify_pill_image, is_demo_mode, GEMINI_MODEL, set_gemini_api_key
-from backend.schedule_engine import (
-    get_current_time,
-    get_simulated_offset,
-    set_simulated_offset,
-    generate_doses_for_medicine,
-    compute_dose_status,
-    get_voice_alert_texts,
-    evaluate_second_course_and_inventory,
-    check_and_create_alerts
-)
-from backend.seed import run_seed
+# Ensure both current directory and parent directory are on sys.path
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_parent_dir = os.path.dirname(_current_dir)
+if _current_dir not in sys.path:
+    sys.path.insert(0, _current_dir)
+if _parent_dir not in sys.path:
+    sys.path.insert(0, _parent_dir)
+
+try:
+    from backend.database import engine, Base, get_db
+    from backend.models import User, Medicine, DoseLog, ScanHistory, Alert
+    from backend.schemas import (
+        PrescriptionParseResponse,
+        MedicineCreate,
+        MedicineUpdate,
+        MedicineResponse,
+        TodayScheduleResponse,
+        DoseItem,
+        DoseActionResponse,
+        InventoryItem,
+        AlertItem,
+        PillIdentifyResponse,
+        ScanHistoryItem,
+        UserSettings,
+        SettingsUpdate,
+        SimulateTimeRequest,
+        RefillRequest
+    )
+    from backend.ai_service import parse_prescription_image, identify_pill_image, is_demo_mode, GEMINI_MODEL, set_gemini_api_key
+    from backend.schedule_engine import (
+        get_current_time,
+        get_simulated_offset,
+        set_simulated_offset,
+        generate_doses_for_medicine,
+        compute_dose_status,
+        get_voice_alert_texts,
+        evaluate_second_course_and_inventory,
+        check_and_create_alerts
+    )
+    from backend.seed import run_seed
+except ImportError:
+    from database import engine, Base, get_db
+    from models import User, Medicine, DoseLog, ScanHistory, Alert
+    from schemas import (
+        PrescriptionParseResponse,
+        MedicineCreate,
+        MedicineUpdate,
+        MedicineResponse,
+        TodayScheduleResponse,
+        DoseItem,
+        DoseActionResponse,
+        InventoryItem,
+        AlertItem,
+        PillIdentifyResponse,
+        ScanHistoryItem,
+        UserSettings,
+        SettingsUpdate,
+        SimulateTimeRequest,
+        RefillRequest
+    )
+    from ai_service import parse_prescription_image, identify_pill_image, is_demo_mode, GEMINI_MODEL, set_gemini_api_key
+    from schedule_engine import (
+        get_current_time,
+        get_simulated_offset,
+        set_simulated_offset,
+        generate_doses_for_medicine,
+        compute_dose_status,
+        get_voice_alert_texts,
+        evaluate_second_course_and_inventory,
+        check_and_create_alerts
+    )
+    from seed import run_seed
 
 # Initialize Database tables
 Base.metadata.create_all(bind=engine)
