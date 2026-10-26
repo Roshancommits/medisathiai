@@ -58,113 +58,125 @@ export const App: React.FC = () => {
 
   // Refresh all state from backend
   const refreshAllData = useCallback(async () => {
+    // 1. Fetch health first to ensure live Gemini vs demo mode is immediately accurate
     try {
-      const [schedRes, invRes, alertsRes, settingsRes, healthRes] = await Promise.all([
-        getTodaySchedule(),
-        getInventory(),
-        getAlerts(),
-        getSettings(),
-        getHealth(),
+      const healthRes = await getHealth();
+      if (healthRes && typeof healthRes.is_demo_mode === 'boolean') {
+        setIsDemoMode(healthRes.is_demo_mode);
+      }
+    } catch (he) {
+      console.warn('Health check notice:', he);
+    }
+
+    try {
+      const [schedRes, invRes, alertsRes, settingsRes] = await Promise.all([
+        getTodaySchedule().catch((e) => { console.warn('Schedule notice:', e); return null; }),
+        getInventory().catch((e) => { console.warn('Inventory notice:', e); return []; }),
+        getAlerts().catch((e) => { console.warn('Alerts notice:', e); return []; }),
+        getSettings().catch((e) => { console.warn('Settings notice:', e); return null; }),
       ]);
 
-      setSchedule(schedRes);
-      setInventory(invRes);
-      setAlerts(alertsRes);
-      setSettings(settingsRes);
-      setIsDemoMode(healthRes.is_demo_mode);
+      if (invRes && Array.isArray(invRes)) setInventory(invRes);
+      if (alertsRes && Array.isArray(alertsRes)) setAlerts(alertsRes);
+      if (settingsRes) setSettings(settingsRes);
 
-      if (schedRes.current_time) {
-        const d = new Date(schedRes.current_time);
-        setSimulatedTimeStr(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      }
+      if (schedRes && schedRes.morning) {
+        setSchedule(schedRes);
+        if (schedRes.current_time) {
+          const d = new Date(schedRes.current_time);
+          setSimulatedTimeStr(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        }
 
-      // Cache all doses locally for offline backup
-      const allDoses = [
-        ...schedRes.morning,
-        ...schedRes.afternoon,
-        ...schedRes.evening,
-        ...schedRes.night,
-      ];
-      cacheScheduleLocally(allDoses);
+        // Cache all doses locally for offline backup
+        const allDoses = [
+          ...schedRes.morning,
+          ...schedRes.afternoon,
+          ...schedRes.evening,
+          ...schedRes.night,
+        ];
+        cacheScheduleLocally(allDoses);
 
-      // Check if any due dose needs an alert modal immediately
-      const firstDue = allDoses.find((d) => d.is_due && d.status !== 'Taken');
-      if (firstDue && !dueModalDose) {
-        setDueModalDose(firstDue);
+        // Check if any due dose needs an alert modal immediately
+        const firstDue = allDoses.find((d) => d.is_due && d.status !== 'Taken');
+        if (firstDue && !dueModalDose) {
+          setDueModalDose(firstDue);
+        }
+      } else {
+        // Fallback demo schedule so app renders immediately even if backend is waking up
+        setSchedule((prev) => prev || {
+          current_time: new Date().toISOString(),
+          simulated_offset_minutes: 0,
+          summary: { total: 3, taken: 0, due: 1, upcoming: 2, missed: 0 },
+          morning: [
+            {
+              id: 1,
+              medicine_id: 1,
+              medicine_name: "Metformin SR",
+              strength: "500 mg",
+              dosage: "1 tablet",
+              route: "Oral",
+              food_instruction: "after_food",
+              scheduled_at: `${new Date().toISOString().split('T')[0]}T08:00:00`,
+              taken_at: null,
+              status: "Upcoming",
+              period: "Morning",
+              is_due: false,
+              voice_alert_text: {
+                en: "Time to take Metformin SR 500 mg after breakfast.",
+                hi: "नाश्ते के बाद मेटफॉर्मिन 500 मिलीग्राम लेने का समय हो गया है।",
+                gu: "નાસ્તા પછી મેટફોર્મિન 500 મિલીગ્રામ લેવાનો સમય થઈ ગયો છે."
+              }
+            },
+            {
+              id: 2,
+              medicine_id: 2,
+              medicine_name: "Pantoprazole DSR",
+              strength: "40 mg",
+              dosage: "1 capsule",
+              route: "Oral",
+              food_instruction: "before_food",
+              scheduled_at: `${new Date().toISOString().split('T')[0]}T07:30:00`,
+              taken_at: null,
+              status: "Due",
+              period: "Morning",
+              is_due: true,
+              voice_alert_text: {
+                en: "Time to take Pantoprazole 40 mg before breakfast with water.",
+                hi: "नाश्ते से पहले पानी के साथ पैंटोप्राजोल 40 मिलीग्राम लेने का समय हो गया है।",
+                gu: "નાસ્તા પહેલાં પાણી સાથે પેન્ટોપ્રાઝોલ 40 મિલીગ્રામ લેવાનો સમય થઈ ગયો છે."
+              }
+            }
+          ],
+          afternoon: [],
+          evening: [],
+          night: [
+            {
+              id: 3,
+              medicine_id: 1,
+              medicine_name: "Metformin SR",
+              strength: "500 mg",
+              dosage: "1 tablet",
+              route: "Oral",
+              food_instruction: "after_food",
+              scheduled_at: `${new Date().toISOString().split('T')[0]}T20:30:00`,
+              taken_at: null,
+              status: "Upcoming",
+              period: "Night",
+              is_due: false,
+              voice_alert_text: {
+                en: "Time to take Metformin SR 500 mg after dinner.",
+                hi: "रात के खाने के बाद मेटफॉर्मिन लेने का समय हो गया है।",
+                gu: "રાત્રિભોજન પછી મેટફોર્મિન લેવાનો સમય થઈ ગયો છે."
+              }
+            }
+          ]
+        });
       }
     } catch (e) {
-      console.warn('Error fetching MediSathi data, falling back to local demo schedule:', e);
-      // Fallback demo schedule so app renders immediately even if backend is waking up
-      setSchedule((prev) => prev || {
-        current_time: new Date().toISOString(),
-        simulated_offset_minutes: 0,
-        summary: { total: 3, taken: 0, due: 1, upcoming: 2, missed: 0 },
-        morning: [
-          {
-            id: 1,
-            medicine_id: 1,
-            medicine_name: "Metformin SR",
-            strength: "500 mg",
-            dosage: "1 tablet",
-            route: "Oral",
-            food_instruction: "after_food",
-            scheduled_at: `${new Date().toISOString().split('T')[0]}T08:00:00`,
-            taken_at: null,
-            status: "Upcoming",
-            period: "Morning",
-            is_due: false,
-            voice_alert_text: {
-              en: "Time to take Metformin SR 500 mg after breakfast.",
-              hi: "नाश्ते के बाद मेटफॉर्मिन 500 मिलीग्राम लेने का समय हो गया है।",
-              gu: "નાસ્તા પછી મેટફોર્મિન 500 મિલીગ્રામ લેવાનો સમય થઈ ગયો છે."
-            }
-          },
-          {
-            id: 2,
-            medicine_id: 2,
-            medicine_name: "Pantoprazole DSR",
-            strength: "40 mg",
-            dosage: "1 capsule",
-            route: "Oral",
-            food_instruction: "before_food",
-            scheduled_at: `${new Date().toISOString().split('T')[0]}T07:30:00`,
-            taken_at: null,
-            status: "Due",
-            period: "Morning",
-            is_due: true,
-            voice_alert_text: {
-              en: "Time to take Pantoprazole 40 mg before breakfast with water.",
-              hi: "नाश्ते से पहले पानी के साथ पैंटोप्राजोल 40 मिलीग्राम लेने का समय हो गया है।",
-              gu: "નાસ્તા પહેલાં પાણી સાથે પેન્ટોપ્રાઝોલ 40 મિલીગ્રામ લેવાનો સમય થઈ ગયો છે."
-            }
-          }
-        ],
-        afternoon: [],
-        evening: [],
-        night: [
-          {
-            id: 3,
-            medicine_id: 1,
-            medicine_name: "Metformin SR",
-            strength: "500 mg",
-            dosage: "1 tablet",
-            route: "Oral",
-            food_instruction: "after_food",
-            scheduled_at: `${new Date().toISOString().split('T')[0]}T20:30:00`,
-            taken_at: null,
-            status: "Upcoming",
-            period: "Night",
-            is_due: false,
-            voice_alert_text: {
-              en: "Time to take Metformin SR 500 mg after dinner.",
-              hi: "रात के खाने के बाद मेटफॉर्मिन लेने का समय हो गया है।",
-              gu: "રાત્રિભોજન પછી મેટફોર્મિન લેવાનો સમય થઈ ગયો છે."
-            }
-          }
-        ]
-      });
+      console.warn('Error fetching MediSathi data:', e);
     }
   }, [dueModalDose]);
+
 
   // Initial load
   useEffect(() => {
